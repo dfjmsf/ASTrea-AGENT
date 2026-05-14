@@ -3,10 +3,10 @@ import json
 import logging
 from typing import List, Dict, Any, Optional
 from openai import OpenAI, AsyncOpenAI
-from dotenv import load_dotenv
+from core.config_paths import load_astrea_env
 
 # 加载环境变量
-load_dotenv()
+load_astrea_env()
 
 logger = logging.getLogger("LLMClient")
 

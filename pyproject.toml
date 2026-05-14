@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "astrea-agent"
-version = "0.7.0"
+version = "0.7.1"
 description = "ASTrea - Autonomous Software Engineering Agent"
 readme = { file = "README.md", content-type = "text/markdown" }
 license = "Apache-2.0"
@@ -12,7 +12,7 @@ license-files = ["LICENSE"]
 authors = [
     { name = "DFJMSF" },
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.13"
 keywords = ["ai-agent", "coding-agent", "llm", "mcp", "cli"]
 classifiers = [
     "Development Status :: 3 - Alpha",

@@ -241,7 +241,7 @@ def print_banner(console: Console, workspace_hint: str = ""):
 
     # 右侧信息行（与 banner 行数对齐）
     info_lines = [
-        "  Version: v0.7.0",
+        "  Version: v0.7.1",
         f"  {workspace_hint}" if workspace_hint else "",
         "",
         "  双击 Ctrl+C 退出",
@@ -364,6 +364,33 @@ async def async_main():
         f"| 项目: [cyan]{project_id}[/cyan] "
         f"| 模型: [dim]{master.model}[/dim]"
     )
+    try:
+        from core.config_paths import get_user_env_path, has_env_file
+        from core.llm_client import default_llm
+        if not has_env_file():
+            console.print(
+                Panel(
+                    "未发现 `.env` 配置文件。\n\n"
+                    "  运行 [bold cyan]/config init[/bold cyan] 可按向导创建用户级全局配置。\n"
+                    f"  默认写入路径: [cyan]{get_user_env_path()}[/cyan]",
+                    title="[yellow]配置提示[/yellow]",
+                    border_style="yellow",
+                    padding=(0, 1),
+                )
+            )
+        elif not default_llm.providers:
+            console.print(
+                Panel(
+                    "已发现 `.env`，但没有加载到可用 LLM Provider。\n\n"
+                    "  请检查 API Key / Base URL / MODELS，或运行 "
+                    "[bold cyan]/config init[/bold cyan] 重新生成用户级配置。",
+                    title="[yellow]Provider 未就绪[/yellow]",
+                    border_style="yellow",
+                    padding=(0, 1),
+                )
+            )
+    except Exception as _cfg_err:
+        console.print(f"[dim]配置检查跳过: {_cfg_err}[/dim]")
     console.print("[dim]输入 /help 查看可用命令。[/dim]\n")
 
     # ═══ 风险操作确认回调（prompt_toolkit 竖向选择器）═══
@@ -546,6 +573,7 @@ async def async_main():
         "prompt": {"skills": "查看 Skill 段", "constraints": "查看硬约束段"},
         "mcp": {"enable": "启动 Server", "disable": "停止 Server", "restart": "重启 Server"},
         "skill": {"enable": "启用 Skill", "disable": "禁用 Skill", "reload": "重新扫描"},
+        "config": {"init": "初始化用户级 .env", "path": "查看配置路径"},
     }
 
     def _get_mcp_server_names() -> list:
@@ -653,7 +681,7 @@ async def async_main():
                     return
 
                 # 别名适配
-                alias_map = {"t": "thinking", "v": "verbose"}
+                alias_map = {"t": "thinking", "v": "verbose", "cfg": "config"}
                 if cmd_name in alias_map:
                     real = alias_map[cmd_name]
                     prefix = parts[1].lower() if len(parts) > 1 else ""

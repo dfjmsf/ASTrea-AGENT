@@ -11,9 +11,9 @@
 
 **面向自动化软件工程的自进化 Coding Agent**
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.10--3.12-blue?logo=python&logoColor=white)
 ![License](https://img.shields.io/badge/License-Apache_2.0-green)
-![Version](https://img.shields.io/badge/Version-0.7.0-orange)
+![Version](https://img.shields.io/badge/Version-0.7.1-orange)
 
 </div>
 
@@ -125,7 +125,7 @@ ASTrea/
 
 ### 环境要求
 
-- Python ≥ 3.10
+- Python 3.10-3.12
 - 至少一个 LLM API Key（DeepSeek / Qwen / GPT 等兼容 OpenAI SDK 的服务）
 
 ### 安装
@@ -149,6 +149,27 @@ pip install -e .
 
 ### 配置
 
+首次启动后可在 TUI 中运行：
+
+```text
+/config init
+```
+
+命令会按顺序要求输入模型提供商、API Key、Base URL、模型名称，并自动生成用户级全局 `.env`：
+
+```text
+Windows: %APPDATA%\ASTrea\.env
+Linux/macOS: ~/.config/astrea/.env
+```
+
+加载优先级：
+
+```text
+当前目录 .env > 用户级 .env > 系统环境变量
+```
+
+也可以手动创建项目级 `.env`：
+
 ```bash
 # 从模板创建配置文件
 copy .env.example .env        # Windows
@@ -160,7 +181,7 @@ copy .env.example .env        # Windows
 ```env
 # 至少配置一个 Provider（推荐 DeepSeek，性价比高）
 DEEPSEEK_API_KEY=sk-your-key-here
-DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
 DEEPSEEK_MODELS=deepseek-chat,deepseek-reasoner
 
 # 选择 Master 使用的模型
@@ -321,7 +342,7 @@ Environment: pypi
 安装验证：
 
 ```bash
-pipx install --pip-args="--index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/" astrea-agent
+pipx install --python 3.11 --suffix testpypi --pip-args="--index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/" astrea-agent
 ```
 
 ### 发布到 PyPI
@@ -329,8 +350,8 @@ pipx install --pip-args="--index-url https://test.pypi.org/simple/ --extra-index
 正式发布通过 Git tag 触发。Tag 必须等于 `pyproject.toml` 中的版本号并带 `v` 前缀。
 
 ```bash
-git tag v0.7.0
-git push origin v0.7.0
+git tag v0.7.1
+git push origin v0.7.1
 ```
 
 ---
@@ -350,6 +371,7 @@ git push origin v0.7.0
 | `/compress` | 手动压缩 L2b 到 L4 归档 |
 | `/mcp <enable\|disable\|restart> <server>` | MCP Server 管理 |
 | `/skill <enable\|disable\|reload>` | Skill 管理 |
+| `/config <init\|path>` | 初始化或查看用户级配置 |
 | `/providers` | 查看已注册 LLM Provider |
 | `/tools` | 查看已注册工具 |
 | `/sessions [序号]` | 查看或恢复历史会话 |
@@ -392,7 +414,7 @@ Master fork 完整 L1+L4+L2b 快照给 Subagent，Subagent 仅可使用白名单
 
 | 类别 | 技术 |
 |------|------|
-| 语言 | Python 3.10+ |
+| 语言 | Python 3.10-3.12 |
 | TUI | Rich + prompt_toolkit |
 | LLM | OpenAI SDK（兼容 Qwen / DeepSeek / GPT） |
 | 持久化 | SQLite |
