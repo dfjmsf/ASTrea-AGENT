@@ -241,7 +241,7 @@ def print_banner(console: Console, workspace_hint: str = ""):
 
     # 右侧信息行（与 banner 行数对齐）
     info_lines = [
-        "  Version: v0.7.1",
+        "  Version: v0.7.2",
         f"  {workspace_hint}" if workspace_hint else "",
         "",
         "  双击 Ctrl+C 退出",

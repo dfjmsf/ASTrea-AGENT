@@ -13,7 +13,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.10--3.12-blue?logo=python&logoColor=white)
 ![License](https://img.shields.io/badge/License-Apache_2.0-green)
-![Version](https://img.shields.io/badge/Version-0.7.1-orange)
+![Version](https://img.shields.io/badge/Version-0.7.2-orange)
 
 </div>
 
@@ -131,19 +131,14 @@ ASTrea/
 ### 安装
 
 ```bash
-# 1. 克隆仓库
 git clone https://github.com/dfjmsf/ASTrea-AGENT.git
 cd ASTrea-AGENT
 
-# 2. 创建虚拟环境
 python -m venv .venv
 .venv\Scripts\activate        # Windows
 # source .venv/bin/activate   # Linux/macOS
 
-# 3. 安装依赖
 pip install -r requirements.txt
-
-# 4.（可选）注册全局命令 astrea
 pip install -e .
 ```
 
@@ -308,51 +303,6 @@ pip install -r requirements.txt
 - `/mcp enable|disable|restart` 是运行时操作，不会回写 `config/mcp_servers.json`。
 - MCP 启动后新增工具会刷新到 Master 的工具清单。
 - MCP 工具调用失败不会中断主流程，会以工具结果返回错误信息。
-
----
-
-## 发布流程
-
-本仓库使用 GitHub Actions + PyPI Trusted Publishing 发布，不需要在 GitHub Secrets 中保存长期 PyPI Token。
-
-### Trusted Publisher 配置
-
-TestPyPI：
-
-```text
-Owner: dfjmsf
-Repository: ASTrea-AGENT
-Workflow: publish.yml
-Environment: testpypi
-```
-
-PyPI：
-
-```text
-Owner: dfjmsf
-Repository: ASTrea-AGENT
-Workflow: publish.yml
-Environment: pypi
-```
-
-### 发布到 TestPyPI
-
-在 GitHub Actions 页面手动运行 `Publish Python Package` workflow。手动运行只发布到 TestPyPI。
-
-安装验证：
-
-```bash
-pipx install --python 3.11 --suffix testpypi --pip-args="--index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/" astrea-agent
-```
-
-### 发布到 PyPI
-
-正式发布通过 Git tag 触发。Tag 必须等于 `pyproject.toml` 中的版本号并带 `v` 前缀。
-
-```bash
-git tag v0.7.1
-git push origin v0.7.1
-```
 
 ---
 

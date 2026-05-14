@@ -475,12 +475,16 @@ _PROVIDER_PRESETS = {
 }
 
 
-def _prompt_value(label: str, default: str = "", password: bool = False) -> str:
+async def _prompt_value(label: str, default: str = "", password: bool = False) -> str:
     """读取一项交互输入。"""
-    from prompt_toolkit import prompt as pt_prompt
+    from prompt_toolkit import PromptSession
 
     suffix = f" [{default}]" if default else ""
-    value = pt_prompt(f"{label}{suffix}: ", is_password=password).strip()
+    session = PromptSession()
+    value = (await session.prompt_async(
+        f"{label}{suffix}: ",
+        is_password=password,
+    )).strip()
     return value or default
 
 
@@ -525,7 +529,7 @@ def _write_user_env(provider_key: str, api_key: str, base_url: str, models: str)
     return str(env_path)
 
 
-def cmd_config(args: list, ctx: dict) -> bool:
+async def cmd_config(args: list, ctx: dict) -> bool:
     """管理 ASTrea 用户级配置。"""
     console: Console = ctx["console"]
 
@@ -558,10 +562,10 @@ def cmd_config(args: list, ctx: dict) -> bool:
     env_path = get_user_env_path()
     if env_path.is_file():
         try:
-            from prompt_toolkit import prompt as pt_prompt
-            overwrite = pt_prompt(
-                f"用户级配置已存在：{env_path}\n是否覆盖？[y/N]: "
-            ).strip().lower()
+            overwrite = (await _prompt_value(
+                f"用户级配置已存在：{env_path}\n是否覆盖？",
+                "N",
+            )).lower()
         except (EOFError, KeyboardInterrupt):
             overwrite = ""
         if overwrite not in ("y", "yes"):
@@ -573,7 +577,7 @@ def cmd_config(args: list, ctx: dict) -> bool:
 
     provider_text = ", ".join(_PROVIDER_PRESETS.keys())
     try:
-        provider_key = _prompt_value("模型提供商", "deepseek").lower()
+        provider_key = (await _prompt_value("模型提供商", "deepseek")).lower()
         if provider_key not in _PROVIDER_PRESETS:
             console.print(
                 f"[error]不支持的提供商: {provider_key}[/error]\n"
@@ -582,13 +586,15 @@ def cmd_config(args: list, ctx: dict) -> bool:
             return True
 
         preset = _PROVIDER_PRESETS[provider_key]
-        api_key = _prompt_value("API Key", password=True)
+        api_key = await _prompt_value("API Key", password=True)
         if not api_key:
             console.print("[error]API Key 不能为空。[/error]")
             return True
 
-        base_url = _clean_base_url_input(_prompt_value("Base URL", preset["base_url"]))
-        models = _prompt_value("模型名称（多个用英文逗号分隔）", preset["model"])
+        base_url = _clean_base_url_input(
+            await _prompt_value("Base URL", preset["base_url"])
+        )
+        models = await _prompt_value("模型名称（多个用英文逗号分隔）", preset["model"])
         models = ",".join(m.strip() for m in models.split(",") if m.strip())
         if not models:
             console.print("[error]模型名称不能为空。[/error]")
