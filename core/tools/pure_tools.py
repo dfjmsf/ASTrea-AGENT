@@ -6,7 +6,7 @@ Ulimite 工具集 — 统一聚合导出
 - ALL_AGENT_TOOLS: 内部封装子 Agent LLM 调用的工具
 - ALL_TOOLS: 全部工具（Master 完整工具箱）
 
-新增工具只需：1. 创建 core/tools/xxx.py  2. 在此处 import 并加入列表。
+新增工具只需：1. 创建 core/tools/xxx/xxx_tool.py  2. 在 core/tools/xxx/__init__.py 导出 TOOL_DEF  3. 在此处 import 并加入列表。
 """
 
 # ═══ 纯函数工具（无 LLM） ═══

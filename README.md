@@ -101,14 +101,14 @@ ASTrea/
 │   ├── skill_runner.py     # Skill 执行引擎
 │   └── tools/              # 内置工具集
 │       ├── __init__.py     # ToolRegistry 统一注册
-│       ├── read_file.py    # 文件读取
-│       ├── edit_code.py    # 代码编辑（diff 应用）
-│       ├── create_code.py  # 文件创建
-│       ├── grep_search.py  # 文本搜索
-│       ├── run_command.py  # 命令执行（风险分级）
-│       ├── save_plan.py    # 执行计划管理
-│       ├── recall_step.py  # 历史步骤回溯
-│       ├── task_done.py    # 任务完成信号
+│       ├── read_file/      # 文件读取（read_file_tool.py + __init__.py）
+│       ├── edit_code/      # 代码编辑（edit_code_tool.py + __init__.py）
+│       ├── create_code/    # 文件创建（create_code_tool.py + __init__.py）
+│       ├── grep_search/    # 文本搜索（grep_search_tool.py + __init__.py）
+│       ├── run_command/    # 命令执行（run_command_tool.py + __init__.py）
+│       ├── save_plan/      # 执行计划管理（save_plan_tool.py + __init__.py）
+│       ├── recall_step/    # 历史步骤回溯（recall_step_tool.py + __init__.py）
+│       ├── task_done/      # 任务完成信号（task_done_tool.py + __init__.py）
 │       ├── subagent/       # Subagent 工具与 Prompt
 │       └── _risk_guard/    # 风险操作分级拦截
 │
@@ -181,21 +181,137 @@ astrea
 
 ---
 
+## Skill 安装与管理
+
+Skill 是按项目加载的 Markdown 指令片段，启动时注入 L1 上下文。当前实现只扫描运行项目目录下的 `.astrea/skills/`；未执行 `/trust` 时，运行项目目录是 `.astrea/workspace/`。
+
+### 安装 Skill
+
+先启动一次 ASTrea，让系统自动创建 `.astrea/` 运行目录；然后只需创建 Skill 子目录：
+
+```text
+.astrea/
+└── skills/
+    └── python-backend/
+        ├── SKILL.md
+        └── metadata.json
+```
+
+`SKILL.md`：
+
+```markdown
+# Python Backend Skill
+
+当任务涉及 Python 后端开发时：
+- 优先复用现有依赖和项目结构。
+- 修改后运行最小可验证测试。
+```
+
+`metadata.json`：
+
+```json
+{
+  "name": "python-backend",
+  "description": "Python 后端开发约束",
+  "version": "1.0",
+  "tags": ["python", "backend"],
+  "exclusive": [],
+  "enabled": false
+}
+```
+
+然后在 CLI 中执行：
+
+```text
+/skill reload
+/skill enable python-backend
+/skill
+```
+
+说明：
+- 不带 `metadata.json` 时，可从 `SKILL.md` frontmatter 提取 `name` / `description`，且默认启用。
+- 带 `metadata.json` 时建议显式配置 `enabled`。
+- 会话中途切换 Skill 会重建 KV Cache；CLI 会提示是否先 `/compress`。
+- 所有启用 Skill 总预算上限为 75,000 字符。
+
+---
+
+## MCP 安装与管理
+
+MCP Server 在 `config/mcp_servers.json` 中声明。当前支持 `stdio` transport；启动后工具会自动桥接到 ToolRegistry，命名格式为 `mcp_<server>_<tool>`。
+
+### 安装 MCP 依赖
+
+```bash
+pip install -r requirements.txt
+```
+
+如果 MCP Server 使用 `npx` 启动，还需要本机已安装 Node.js / npm。
+
+### 配置 MCP Server
+
+示例：
+
+```json
+[
+  {
+    "name": "context7",
+    "command": "npx",
+    "args": ["-y", "@upstash/context7-mcp@latest"],
+    "transport": "stdio",
+    "enabled": true
+  }
+]
+```
+
+配置字段：
+
+| 字段 | 说明 |
+|------|------|
+| `name` | Server 名称，也是工具名前缀的一部分 |
+| `command` | 启动命令，如 `npx`、`python`、`uvx` |
+| `args` | 启动参数数组 |
+| `transport` | 当前仅支持 `stdio` |
+| `enabled` | `true` 时 CLI 启动后自动连接 |
+
+### 管理 MCP
+
+```text
+/mcp
+/mcp enable context7
+/mcp disable context7
+/mcp restart context7
+```
+
+说明：
+- `/mcp enable|disable|restart` 是运行时操作，不会回写 `config/mcp_servers.json`。
+- MCP 启动后新增工具会刷新到 Master 的工具清单。
+- MCP 工具调用失败不会中断主流程，会以工具结果返回错误信息。
+
+---
+
 ## CLI 命令
 
 | 命令 | 说明 |
 |------|------|
 | `/help` | 查看所有可用命令 |
+| `/exit` | 退出 ASTrea |
 | `/model <name>` | 切换模型（支持补全） |
 | `/thinking <off\|on\|max>` | 深度思考模式开关 |
+| `/stats` | 查看 Token、步数、上下文等运行统计 |
 | `/verbose <on\|off>` | 日志详细/紧凑模式 |
 | `/todo` | 查看当前任务进度 |
-| `/prompt` | 预览当前 System Prompt |
+| `/context` | 查看上下文空间使用情况 |
+| `/compress` | 手动压缩 L2b 到 L4 归档 |
 | `/mcp <enable\|disable\|restart> <server>` | MCP Server 管理 |
 | `/skill <enable\|disable\|reload>` | Skill 管理 |
-| `/status` | 查看记忆层状态与 Token 用量 |
-| `/save` | 手动保存会话记忆 |
-| `/clear` | 清空当前会话 |
+| `/providers` | 查看已注册 LLM Provider |
+| `/tools` | 查看已注册工具 |
+| `/sessions [序号]` | 查看或恢复历史会话 |
+| `/new` | 归档当前会话并开始新会话 |
+| `/evo <on\|off\|status\|config>` | 管理自进化系统 |
+| `/synth list` | 查看合成工具 |
+| `/constraint list` | 查看约束规则 |
 
 ---
 
