@@ -290,6 +290,51 @@ pip install -r requirements.txt
 
 ---
 
+## 发布流程
+
+本仓库使用 GitHub Actions + PyPI Trusted Publishing 发布，不需要在 GitHub Secrets 中保存长期 PyPI Token。
+
+### Trusted Publisher 配置
+
+TestPyPI：
+
+```text
+Owner: dfjmsf
+Repository: ASTrea-AGENT
+Workflow: publish.yml
+Environment: testpypi
+```
+
+PyPI：
+
+```text
+Owner: dfjmsf
+Repository: ASTrea-AGENT
+Workflow: publish.yml
+Environment: pypi
+```
+
+### 发布到 TestPyPI
+
+在 GitHub Actions 页面手动运行 `Publish Python Package` workflow。手动运行只发布到 TestPyPI。
+
+安装验证：
+
+```bash
+pipx install --pip-args="--index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/" astrea-agent
+```
+
+### 发布到 PyPI
+
+正式发布通过 Git tag 触发。Tag 必须等于 `pyproject.toml` 中的版本号并带 `v` 前缀。
+
+```bash
+git tag v0.7.0
+git push origin v0.7.0
+```
+
+---
+
 ## CLI 命令
 
 | 命令 | 说明 |
