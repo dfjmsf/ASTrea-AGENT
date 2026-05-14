@@ -130,6 +130,21 @@ ASTrea/
 
 ### 安装
 
+推荐使用 `pipx` 安装正式版：
+
+```bash
+pipx install --python 3.11 astrea-agent
+```
+
+如果本机还没有 `pipx`：
+
+```bash
+python -m pip install --user pipx
+python -m pipx ensurepath
+```
+
+也可以从源码运行：
+
 ```bash
 git clone https://github.com/dfjmsf/ASTrea-AGENT.git
 cd ASTrea-AGENT
