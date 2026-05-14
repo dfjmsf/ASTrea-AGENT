@@ -1,0 +1,9 @@
+# ASTrea 核心依赖
+rich>=13.0
+prompt-toolkit>=3.0
+openai>=1.30
+python-dotenv>=1.0
+pydantic>=2.0
+
+# MCP 协议支持（可选，不装则 MCP 功能不可用）
+mcp>=1.0

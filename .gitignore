@@ -1,0 +1,74 @@
+# ========================================
+# ASTrea Agent — .gitignore
+# ========================================
+
+# ---------- 环境变量与密钥 ----------
+.env
+config/custom_providers.json
+
+# ---------- Python 运行时 ----------
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.egg-info/
+
+# ---------- 临时脚本（_run_ / _test_ / _debug_ 等前缀）----------
+_run_*.py
+_test_*.py
+_check_*.py
+_debug_*.py
+_fix_*.py
+_verify_*.py
+_dump*
+test.py
+
+# ---------- 运行时数据 ----------
+*.db
+*.sqlite3
+logs/
+*.log
+
+# ---------- 不提交的目录 ----------
+简历/
+paper/
+docs/
+scratch/
+/tools/
+prompt_preview/
+output_project/
+projects/
+sandboxes/
+uploads/
+data/
+ms-playwright/
+
+# ---------- 个人笔记 ----------
+思路.txt
+流程.txt
+规划.txt
+
+# ---------- 旧架构遗留 ----------
+config/seed_memories.json
+
+# ---------- IDE / 编辑器 ----------
+.idea/
+.vscode/
+.ruff_cache/
+
+# ---------- 构建产物 ----------
+dist/
+build/
+
+# ---------- Node.js ----------
+node_modules/
+
+# ---------- 系统文件 ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- Gemini Agent ----------
+.gemini/

@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "astrea-agent"
+version = "0.2.0"
+description = "ASTrea - Autonomous Software Engineering Agent"
+requires-python = ">=3.10"
+dependencies = [
+    "rich>=13.0",
+    "prompt-toolkit>=3.0",
+    "openai>=1.30",
+    "python-dotenv>=1.0",
+    "pydantic>=2.0",
+    "textual>=3.0",
+]
+
+[project.scripts]
+astrea = "cli:main"
+
+[tool.setuptools]
+py-modules = ["cli", "cli_commands"]
+
+[tool.setuptools.packages.find]
+include = ["core*", "tools*", "agents*", "config*", "prompts*", "playbooks*"]
+
