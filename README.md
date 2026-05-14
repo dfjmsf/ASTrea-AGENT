@@ -1,1 +1,245 @@
-# ASTrea-AGENT
+<div align="center">
+
+```
+ █████╗ ███████╗████████╗██████╗ ███████╗ █████╗        █████╗  ██████╗ ███████╗███╗   ██╗████████╗
+██╔══██╗██╔════╝╚══██╔══╝██╔══██╗██╔════╝██╔══██╗      ██╔══██╗██╔════╝ ██╔════╝████╗  ██║╚══██╔══╝
+███████║███████╗   ██║   ██████╔╝█████╗  ███████║█████╗███████║██║  ███╗█████╗  ██╔██╗ ██║   ██║   
+██╔══██║╚════██║   ██║   ██╔══██╗██╔══╝  ██╔══██║╚════╝██╔══██║██║   ██║██╔══╝  ██║╚██╗██║   ██║   
+██║  ██║███████║   ██║   ██║  ██║███████╗██║  ██║      ██║  ██║╚██████╔╝███████╗██║ ╚████║   ██║   
+╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝      ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝   ╚═╝   
+```
+
+**面向自动化软件工程的自进化 Coding Agent**
+
+![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white)
+![License](https://img.shields.io/badge/License-Apache_2.0-green)
+![Version](https://img.shields.io/badge/Version-0.7.0-orange)
+
+</div>
+
+ASTrea 是一个具备分层记忆和自进化能力的终端 Coding Agent 框架。它以中心化的 Master + ReAct 循环为核心，通过分层上下文管理、双通道自进化和受控 Subagent 分支，解决 LLM 驱动的代码生成在长程任务中面临的上下文退化、经验遗失和调查噪声问题。
+
+
+---
+
+## 特性概览
+
+- **分层记忆系统 (LayeredMemory)**  
+  L1 冻结锚点 + L4 低频归档 + L2b 追加式对话链/状态机，三层物理拼接结构，支持零 LLM 调用的确定性上下文压缩，KV Cache 缓存命中率约 95%。
+
+- **双通道自进化**  
+  成功轨迹 → 模式挖掘 → 工具合成（程序性记忆）  
+  间隔复现失败 → 约束生成 → 运行时注入（反思性约束）  
+  配合熵减淘汰机制，防止工具库和约束库无限膨胀。
+
+- **Subagent Fork**  
+  Master 可 fork 完整上下文快照给只读调查分支，通过工具白名单和结构化 JSON 报告协议实现信息瓶颈，将调查噪声隔离在分支中。
+
+- **多 Provider LLM 路由**  
+  支持 Qwen / DeepSeek / GPT 等多模型热切换，兼容 OpenAI SDK 接口规范。支持深度思考模式、推理强度控制和 Token 费用追踪。
+
+- **MCP 协议支持**  
+  动态接入外部 MCP Server，运行时启用/停用/重启，工具自动注册到统一 Registry。
+
+- **Skill 系统**  
+  支持以 Markdown 定义的 Skill 片段注入 L1 层，按规则激活，不污染运行时上下文。
+
+- **Rich TUI 终端界面**  
+  基于 Rich + prompt_toolkit 的终端交互界面，支持 `/` 命令补全、上下文预算进度条、Token 消耗面板、风险操作确认选择器。
+
+---
+
+## 系统架构
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                      CLI (Rich TUI)                      │
+│              prompt_toolkit 交互 · / 命令路由             │
+└────────────────────────┬─────────────────────────────────┘
+                         │
+┌────────────────────────▼─────────────────────────────────┐
+│                    Master (ReAct 循环)                    │
+│         单一决策中心 · 工具调度 · 状态推进 · 自进化编排     │
+├──────────┬──────────┬──────────┬──────────┬───────────────┤
+│  Layered │   Tool   │  Self-   │ Subagent │    Skill      │
+│  Memory  │ Registry │ Evolution│   Fork   │   Manager     │
+│ L1+L4+L2b│ 18+ 工具 │ 轨迹挖掘 │ 只读调查 │ Markdown 注入 │
+│ 确定性压缩│ +MCP+合成│ +约束生成│ 信息瓶颈 │ 按规则激活    │
+└──────────┴──────────┴──────────┴──────────┴───────────────┘
+                         │
+┌────────────────────────▼─────────────────────────────────┐
+│                  LLM Client (多 Provider)                 │
+│      Qwen · DeepSeek · GPT · 自定义 Provider              │
+│      思考模式 · Token 追踪 · KV Cache 优化                 │
+└──────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 项目结构
+
+```
+ASTrea/
+├── cli.py                  # TUI 入口（Rich + prompt_toolkit）
+├── cli_commands.py         # / 命令路由与处理器
+├── pyproject.toml          # 项目元数据与依赖
+├── .env                    # Provider 密钥与模型配置
+│
+├── core/
+│   ├── master.py           # Master ReAct 循环主控
+│   ├── layered_memory.py   # 三层分层记忆 + 确定性压缩
+│   ├── llm_client.py       # 多 Provider LLM 路由 + Token 追踪
+│   ├── subagent.py         # Subagent Fork 只读调查
+│   ├── evo_agent.py        # 自进化编排（工具合成 + 约束生成）
+│   ├── pattern_miner.py    # 轨迹模式挖掘（三层过滤）
+│   ├── tool_synthesizer.py # 工具合成 + 四级验证管线
+│   ├── constraint_store.py # 反思性约束管理
+│   ├── trajectory_logger.py# 轨迹与失败事件采集
+│   ├── memory_db.py        # SQLite 持久层
+│   ├── mcp_manager.py      # MCP Server 生命周期管理
+│   ├── skill_manager.py    # Skill 扫描与激活
+│   ├── skill_runner.py     # Skill 执行引擎
+│   └── tools/              # 内置工具集
+│       ├── __init__.py     # ToolRegistry 统一注册
+│       ├── read_file.py    # 文件读取
+│       ├── edit_code.py    # 代码编辑（diff 应用）
+│       ├── create_code.py  # 文件创建
+│       ├── grep_search.py  # 文本搜索
+│       ├── run_command.py  # 命令执行（风险分级）
+│       ├── save_plan.py    # 执行计划管理
+│       ├── recall_step.py  # 历史步骤回溯
+│       ├── task_done.py    # 任务完成信号
+│       ├── subagent/       # Subagent 工具与 Prompt
+│       └── _risk_guard/    # 风险操作分级拦截
+│
+├── config/
+│   └── mcp_servers.json       # MCP Server 配置
+│
+└── prompts/
+    └── master_system.md       # Master System Prompt 模板
+```
+
+---
+
+## 快速开始
+
+### 环境要求
+
+- Python ≥ 3.10
+- 至少一个 LLM API Key（DeepSeek / Qwen / GPT 等兼容 OpenAI SDK 的服务）
+
+### 安装
+
+```bash
+# 1. 克隆仓库
+git clone https://github.com/dfjmsf/ASTrea-AGENT.git
+cd ASTrea-AGENT
+
+# 2. 创建虚拟环境
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+# source .venv/bin/activate   # Linux/macOS
+
+# 3. 安装依赖
+pip install -r requirements.txt
+
+# 4.（可选）注册全局命令 astrea
+pip install -e .
+```
+
+### 配置
+
+```bash
+# 从模板创建配置文件
+copy .env.example .env        # Windows
+# cp .env.example .env        # Linux/macOS
+```
+
+打开 `.env`，填入你的 API Key：
+
+```env
+# 至少配置一个 Provider（推荐 DeepSeek，性价比高）
+DEEPSEEK_API_KEY=sk-your-key-here
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODELS=deepseek-chat,deepseek-reasoner
+
+# 选择 Master 使用的模型
+MODEL_MASTER=deepseek-chat
+```
+
+> 详细配置说明见 [.env.example](.env.example)，包含所有可选项和注释。
+
+### 启动
+
+```bash
+# 直接运行
+python cli.py
+
+# 或使用全局命令（需先 pip install -e .）
+astrea
+```
+
+---
+
+## CLI 命令
+
+| 命令 | 说明 |
+|------|------|
+| `/help` | 查看所有可用命令 |
+| `/model <name>` | 切换模型（支持补全） |
+| `/thinking <off\|on\|max>` | 深度思考模式开关 |
+| `/verbose <on\|off>` | 日志详细/紧凑模式 |
+| `/todo` | 查看当前任务进度 |
+| `/prompt` | 预览当前 System Prompt |
+| `/mcp <enable\|disable\|restart> <server>` | MCP Server 管理 |
+| `/skill <enable\|disable\|reload>` | Skill 管理 |
+| `/status` | 查看记忆层状态与 Token 用量 |
+| `/save` | 手动保存会话记忆 |
+| `/clear` | 清空当前会话 |
+
+---
+
+## 核心模块说明
+
+### LayeredMemory
+
+三层物理拼接的上下文管理：
+
+| 层级 | 特性 | 内容 |
+|------|------|------|
+| **L1 锚点层** | 冻结前缀，永不变 | System Prompt + 项目规则 + Skill + 硬约束 |
+| **L4 归档层** | 低频追加 | 压缩触发时写入归档摘要 |
+| **L2b 对话链** | 只追加，状态机 | 当前目标 + 工具反馈 + 未完成事项 |
+
+压缩策略：前 85% 消息按工具类型规则压缩为结构化 Markdown，保留最近 15% 原始消息。纯感知工具（read_file, grep）完全丢弃，状态变更工具保留骨架，写入工具保留完整描述。
+
+### 自进化系统
+
+**程序性记忆（工具合成）：** 轨迹采集 → 三层过滤（频率 → 熵 → 聚类）→ 模板填空式合成 → 四级验证（语法 → 签名 → 沙箱 → 元数据）→ 注册。
+
+**反思性约束：** 失败采集 → 间隔复现检测 → 约束生成 → D/E 方案运行时注入。
+
+**熵减淘汰：** 工具未使用 50 轮则删除，失败率 > 50% 则禁用；约束未触发 40 轮则删除，标签重叠 ≥ 80% 则合并。
+
+### Subagent Fork
+
+Master fork 完整 L1+L4+L2b 快照给 Subagent，Subagent 仅可使用白名单内的只读工具（grep, read_file, ls, run_command），执行结果以 `{conclusion, findings, suggestion}` JSON 报告回注 Master。支持 asyncio.gather 并发多个 Subagent。
+
+---
+
+## 技术栈
+
+| 类别 | 技术 |
+|------|------|
+| 语言 | Python 3.10+ |
+| TUI | Rich + prompt_toolkit |
+| LLM | OpenAI SDK（兼容 Qwen / DeepSeek / GPT） |
+| 持久化 | SQLite |
+| 外部工具 | MCP Protocol |
+| 构建 | setuptools + pyproject.toml |
+
+---
+
+## License
+
+Apache License 2.0
